@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.RuntimeValidator = exports.PropType = void 0;
-var PropType;
+export var PropType;
 (function (PropType) {
     PropType["UNDEFINED"] = "undefined";
     PropType["NULL"] = "null";
@@ -10,8 +7,8 @@ var PropType;
     PropType["STRING"] = "string";
     PropType["ARRAY"] = "array";
     PropType["OBJECT"] = "object";
-})(PropType || (exports.PropType = PropType = {}));
-class RuntimeValidator {
+})(PropType || (PropType = {}));
+export class RuntimeValidator {
     /**
      * Get the type of a property, discerning JavaScript's generic "object" type
      * into its 3 possible variants: object, array or null
@@ -311,4 +308,3 @@ class RuntimeValidator {
         return errors;
     }
 }
-exports.RuntimeValidator = RuntimeValidator;

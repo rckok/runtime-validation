@@ -637,4 +637,150 @@ describe('RuntimeValidator', () => {
       expect(RuntimeValidator.validate(invalidData, schema)).toHaveLength(1);
     });
   });
+
+  describe('Real world scenario', () => {
+    test('validate a complex object', () => {
+      const { ARRAY, BOOLEAN, STRING, NULL, NUMBER } = PropType;
+
+      const data = {
+        name: 'MyInsertedCourt',
+        backgroundId: '16',
+        linesId: null,
+        logos: [],
+        size: 'Full',
+        usage: 'Professional',
+        tags: [],
+        type: null,
+        league: null,
+        index: -1,
+        category: 'play',
+        phases: [
+          {
+            id: 'testPhase1',
+            logos: [
+              {
+                y: 0.05144290348387326,
+                x: 0.0266,
+                logoId: '332',
+                width: 0.01765961484998182,
+                aspectRatio: 0.4407839866555463,
+                effects: [],
+                rotation: -90,
+                id: 'abc',
+                isEditable: true,
+              },
+              {
+                aspectRatio: 2.9403973509933774,
+                width: 0.13744889144831557,
+                id: '123',
+                effects: [
+                  {
+                    type: 'color',
+                    color: '#0a2140',
+                  },
+                ],
+                logoId: '329',
+                y: 0.8048,
+                isEditable: true,
+                rotation: 90,
+                x: 0.9734,
+              },
+            ],
+          },
+        ],
+        recordings: [],
+      };
+
+      const CourtLogoSchema = {
+        id: STRING,
+        logoId: STRING,
+        x: NUMBER,
+        y: NUMBER,
+        width: NUMBER,
+        aspectRatio: NUMBER,
+        rotation: NUMBER,
+        effects: [
+          {
+            oneOf: [
+              {
+                type: {
+                  dataType: STRING,
+                  allowedValues: ['color'],
+                },
+                color: STRING,
+                blendMode: {
+                  optional: true,
+                  dataType: STRING,
+                  allowedValues: ['normal', 'multiply'],
+                },
+              },
+              {
+                type: {
+                  dataType: STRING,
+                  allowedValues: ['opacity'],
+                },
+                opacity: NUMBER,
+              },
+            ],
+          },
+        ],
+        isEditable: BOOLEAN,
+      };
+
+      const schema = {
+        name: STRING,
+        index: {
+          optional: true,
+          dataType: NUMBER,
+        },
+        type: {
+          oneOf: [STRING, NULL],
+          optional: true,
+        },
+        category: {
+          dataType: STRING,
+          allowedValues: ['regular', 'play', 'fitness', 'presentation'],
+        },
+        backgroundId: STRING,
+        linesId: {
+          oneOf: [STRING, NULL],
+          optional: true,
+        },
+        logos: {
+          dataType: ARRAY,
+          items: CourtLogoSchema,
+        },
+        size: STRING,
+        usage: STRING,
+        league: {
+          oneOf: [STRING, NULL],
+          optional: true,
+        },
+        tags: [STRING],
+        phases: {
+          dataType: ARRAY,
+          items: {
+            id: STRING,
+            logos: {
+              dataType: ARRAY,
+              items: CourtLogoSchema,
+            },
+          },
+        },
+        recordings: {
+          dataType: ARRAY,
+          items: [
+            {
+              id: STRING,
+              name: STRING,
+            },
+          ],
+        },
+      };
+
+      const errors = RuntimeValidator.validate(data, schema);
+      console.log(errors);
+      expect(errors.length).toBe(0);
+    });
+  });
 });
