@@ -303,6 +303,27 @@ const schema: Schema = {
 };
 ```
 
+## Global Strict Mode
+
+By default, objects are validated in strict mode: additional properties not specified in the schema are not allowed. You can change this default globally using the static `RuntimeValidator.strict` property. This affects all schemas that do not explicitly set `additionalProperties`.
+
+- When `RuntimeValidator.strict` is `true` (the default), additional properties are not allowed unless `additionalProperties: true` is set in the schema.
+- When `RuntimeValidator.strict` is `false`, additional properties are allowed unless `additionalProperties: false` is set in the schema.
+
+You can set this property using the static getter/setter:
+
+```typescript
+import { RuntimeValidator } from 'runtime-validation';
+
+// Allow additional properties by default (non-strict mode)
+RuntimeValidator.strict = false;
+
+// Revert to strict mode (no additional properties allowed by default)
+RuntimeValidator.strict = true;
+```
+
+This setting is global and will affect all subsequent validations unless overridden per schema.
+
 ## Error Format
 
 Validation will return a list of zero or more errors, each of which includes:

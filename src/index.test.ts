@@ -783,4 +783,48 @@ describe('RuntimeValidator', () => {
       expect(errors.length).toBe(0);
     });
   });
+
+  describe('Global strict mode', () => {
+    afterEach(() => {
+      // Reset to default after each test
+      RuntimeValidator.strict = true;
+    });
+
+    test('strict=true (default): additional properties are not allowed', () => {
+      RuntimeValidator.strict = true;
+      const schema: Schema = {
+        foo: PropType.STRING,
+      };
+      const valid = { foo: 'bar' };
+      const invalid = { foo: 'bar', extra: 123 };
+      expect(RuntimeValidator.validate(valid, schema)).toHaveLength(0);
+      expect(RuntimeValidator.validate(invalid, schema)).toHaveLength(1);
+      expect(RuntimeValidator.validate(invalid, schema)[0].message).toMatch(/Unexpected property/);
+    });
+
+    test('strict=false: additional properties are allowed by default', () => {
+      RuntimeValidator.strict = false;
+      const schema: Schema = {
+        foo: PropType.STRING,
+      };
+      const valid = { foo: 'bar' };
+      const validWithExtra = { foo: 'bar', extra: 123 };
+      expect(RuntimeValidator.validate(valid, schema)).toHaveLength(0);
+      expect(RuntimeValidator.validate(validWithExtra, schema)).toHaveLength(0);
+    });
+
+    test('per-schema additionalProperties overrides global strict', () => {
+      RuntimeValidator.strict = false;
+      const schema: Schema = {
+        dataType: PropType.OBJECT,
+        properties: { foo: PropType.STRING },
+        additionalProperties: false,
+      };
+      const valid = { foo: 'bar' };
+      const invalid = { foo: 'bar', extra: 123 };
+      expect(RuntimeValidator.validate(valid, schema)).toHaveLength(0);
+      expect(RuntimeValidator.validate(invalid, schema)).toHaveLength(1);
+      expect(RuntimeValidator.validate(invalid, schema)[0].message).toMatch(/Unexpected property/);
+    });
+  });
 });

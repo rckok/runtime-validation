@@ -1,6 +1,6 @@
 {
   "name": "runtime-validation",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A lightweight runtime validation library for JavaScript data structures using TypeScript-like schemas",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

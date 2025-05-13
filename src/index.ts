@@ -57,6 +57,16 @@ type SchemaLiteral = { [key: string]: NestedSchema };
 export type Schema = SchemaValue | PropType[] | SchemaValue[] | SchemaObject | SchemaLiteral;
 
 export class RuntimeValidator {
+  private static _strict: boolean = true;
+
+  public static get strict(): boolean {
+    return this._strict;
+  }
+
+  public static set strict(value: boolean) {
+    this._strict = value;
+  }
+
   /**
    * Validates data against a schema and returns an array of validation errors
    * @param data The data to validate
@@ -365,7 +375,7 @@ export class RuntimeValidator {
       return {
         dataType: PropType.OBJECT,
         properties: normalizedProperties,
-        additionalProperties: false, // Default to strict mode
+        additionalProperties: !RuntimeValidator._strict,
       } as ObjectSchema;
     }
 
