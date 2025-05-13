@@ -17,12 +17,12 @@ type PrimitiveValue = string | number | boolean | null | undefined;
 type JsonValue = PrimitiveValue | JsonValue[] | {
     [key: string]: JsonValue;
 };
-export interface BaseSchema {
+interface BaseSchema {
     dataType: PropType;
     optional?: boolean;
     allowedValues?: PrimitiveValue[];
 }
-export interface ObjectSchema extends BaseSchema {
+interface ObjectSchema extends BaseSchema {
     dataType: PropType.OBJECT;
     properties: Record<string, Schema>;
     additionalProperties?: boolean;
@@ -53,23 +53,9 @@ type SchemaLiteral = {
 };
 export type Schema = SchemaValue | PropType[] | SchemaValue[] | SchemaObject | SchemaLiteral;
 export declare class RuntimeValidator {
-    /**
-     * Get the type of a property, discerning JavaScript's generic "object" type
-     * into its 3 possible variants: object, array or null
-     * @param data The data to get the type of
-     */
-    private static _getTypeOf;
-    /**
-     * Formats validation errors into a human-readable string
-     * @param errors Array of validation errors to format
-     * @returns A formatted string with all validation errors
-     */
-    static formatErrors(errors: ValidationError[]): string;
-    /**
-     * Normalizes a schema to its full form
-     * @param schema The schema to normalize
-     */
-    private static _normalizeSchema;
+    private static _strict;
+    static get strict(): boolean;
+    static set strict(value: boolean);
     /**
      * Validates data against a schema and returns an array of validation errors
      * @param data The data to validate
@@ -77,5 +63,22 @@ export declare class RuntimeValidator {
      * @param path The current path in the data structure (used for error reporting)
      */
     static validate(data: JsonValue, schema: Schema, path?: string): ValidationError[];
+    /**
+     * Formats validation errors into a human-readable string
+     * @param errors Array of validation errors to format
+     * @returns A formatted string with all validation errors
+     */
+    static formatErrors(errors: ValidationError[]): string;
+    /**
+     * Get the type of a property, discerning JavaScript's generic "object" type
+     * into its 3 possible variants: object, array or null
+     * @param data The data to get the type of
+     */
+    private static _getTypeOf;
+    /**
+     * Normalizes a schema to its full form
+     * @param schema The schema to normalize
+     */
+    private static _normalizeSchema;
 }
 export {};

@@ -9,143 +9,12 @@ export var PropType;
     PropType["OBJECT"] = "object";
 })(PropType || (PropType = {}));
 export class RuntimeValidator {
-    /**
-     * Get the type of a property, discerning JavaScript's generic "object" type
-     * into its 3 possible variants: object, array or null
-     * @param data The data to get the type of
-     */
-    static _getTypeOf = (data) => {
-        const typeString = typeof data;
-        return typeString === 'object'
-            ? Array.isArray(data)
-                ? 'array'
-                : data === null
-                    ? 'null'
-                    : 'object'
-            : typeString;
-    };
-    /**
-     * Formats validation errors into a human-readable string
-     * @param errors Array of validation errors to format
-     * @returns A formatted string with all validation errors
-     */
-    static formatErrors(errors) {
-        if (errors.length === 0) {
-            return 'No validation errors';
-        }
-        const formatValue = (value) => {
-            if (value === null)
-                return 'null';
-            if (value === undefined)
-                return 'undefined';
-            const strValue = String(value);
-            // Handle object type descriptions
-            if (strValue === '[object Object]') {
-                return 'object';
-            }
-            // Handle array type descriptions
-            if (strValue === '[object Array]') {
-                return 'array';
-            }
-            // Handle union type descriptions
-            if (typeof strValue === 'string' && strValue.startsWith('one of ')) {
-                return strValue;
-            }
-            // Handle allowed values
-            if (typeof strValue === 'string' && strValue.startsWith('one of [')) {
-                return strValue;
-            }
-            return strValue;
-        };
-        return errors
-            .map((error, index) => {
-            const path = error.path ? `at "${error.path}"` : 'at root';
-            const expected = formatValue(error.expected);
-            const received = formatValue(error.received);
-            return `${index + 1}. ${path}: ${error.message} (expected ${expected}, received ${received})`;
-        })
-            .join('\n');
+    static _strict = true;
+    static get strict() {
+        return this._strict;
     }
-    /**
-     * Normalizes a schema to its full form
-     * @param schema The schema to normalize
-     */
-    static _normalizeSchema(schema) {
-        // If schema is just a PropType, convert it to a BaseSchema
-        if (typeof schema === 'string') {
-            return { dataType: schema };
-        }
-        // If schema is an array literal (shorthand for array schema)
-        if (Array.isArray(schema)) {
-            // Handle array of union types
-            if (schema.length > 1) {
-                return {
-                    dataType: PropType.ARRAY,
-                    items: {
-                        oneOf: schema.map((s) => this._normalizeSchema(s)),
-                    },
-                };
-            }
-            // Handle single type array
-            const firstItem = schema[0];
-            if (Array.isArray(firstItem)) {
-                // Handle nested array shorthand
-                return {
-                    dataType: PropType.ARRAY,
-                    items: this._normalizeSchema(firstItem),
-                };
-            }
-            return {
-                dataType: PropType.ARRAY,
-                items: this._normalizeSchema(firstItem),
-            };
-        }
-        // If schema is an object without dataType/properties, assume it's an object schema
-        if (typeof schema === 'object' && !('dataType' in schema) && !('oneOf' in schema)) {
-            const normalizedProperties = {};
-            for (const [key, value] of Object.entries(schema)) {
-                // Handle array shorthand in properties
-                if (Array.isArray(value)) {
-                    normalizedProperties[key] = {
-                        dataType: PropType.ARRAY,
-                        items: value.length === 1
-                            ? this._normalizeSchema(value[0])
-                            : {
-                                oneOf: value.map((s) => this._normalizeSchema(s)),
-                            },
-                    };
-                }
-                else {
-                    normalizedProperties[key] = this._normalizeSchema(value);
-                }
-            }
-            return {
-                dataType: PropType.OBJECT,
-                properties: normalizedProperties,
-                additionalProperties: false, // Default to strict mode
-            };
-        }
-        // If schema is a union type, normalize each of its schemas
-        if (typeof schema === 'object' && 'oneOf' in schema) {
-            const unionSchema = schema;
-            return {
-                ...unionSchema,
-                oneOf: unionSchema.oneOf.map((s) => this._normalizeSchema(s)),
-            };
-        }
-        // If schema is an object schema, normalize its properties
-        if (typeof schema === 'object' && 'properties' in schema) {
-            const objSchema = schema;
-            const normalizedProperties = {};
-            for (const [key, value] of Object.entries(objSchema.properties)) {
-                normalizedProperties[key] = this._normalizeSchema(value);
-            }
-            return {
-                ...objSchema,
-                properties: normalizedProperties,
-            };
-        }
-        return schema;
+    static set strict(value) {
+        this._strict = value;
     }
     /**
      * Validates data against a schema and returns an array of validation errors
@@ -306,5 +175,143 @@ export class RuntimeValidator {
             }
         }
         return errors;
+    }
+    /**
+     * Formats validation errors into a human-readable string
+     * @param errors Array of validation errors to format
+     * @returns A formatted string with all validation errors
+     */
+    static formatErrors(errors) {
+        if (errors.length === 0) {
+            return 'No validation errors';
+        }
+        const formatValue = (value) => {
+            if (value === null)
+                return 'null';
+            if (value === undefined)
+                return 'undefined';
+            const strValue = String(value);
+            // Handle object type descriptions
+            if (strValue === '[object Object]') {
+                return 'object';
+            }
+            // Handle array type descriptions
+            if (strValue === '[object Array]') {
+                return 'array';
+            }
+            // Handle union type descriptions
+            if (typeof strValue === 'string' && strValue.startsWith('one of ')) {
+                return strValue;
+            }
+            // Handle allowed values
+            if (typeof strValue === 'string' && strValue.startsWith('one of [')) {
+                return strValue;
+            }
+            return strValue;
+        };
+        return errors
+            .map((error, index) => {
+            const path = error.path ? `at "${error.path}"` : 'at root';
+            const expected = formatValue(error.expected);
+            const received = formatValue(error.received);
+            return `${index + 1}. ${path}: ${error.message} (expected ${expected}, received ${received})`;
+        })
+            .join('\n');
+    }
+    /**
+     * Get the type of a property, discerning JavaScript's generic "object" type
+     * into its 3 possible variants: object, array or null
+     * @param data The data to get the type of
+     */
+    static _getTypeOf = (data) => {
+        const typeString = typeof data;
+        return typeString === 'object'
+            ? Array.isArray(data)
+                ? 'array'
+                : data === null
+                    ? 'null'
+                    : 'object'
+            : typeString;
+    };
+    /**
+     * Normalizes a schema to its full form
+     * @param schema The schema to normalize
+     */
+    static _normalizeSchema(schema) {
+        // If schema is just a PropType, convert it to a BaseSchema
+        if (typeof schema === 'string') {
+            return { dataType: schema };
+        }
+        // If schema is an array literal (shorthand for array schema)
+        if (Array.isArray(schema)) {
+            // Handle array of union types
+            if (schema.length > 1) {
+                return {
+                    dataType: PropType.ARRAY,
+                    items: {
+                        oneOf: schema.map((s) => this._normalizeSchema(s)),
+                    },
+                };
+            }
+            // Handle single type array
+            const firstItem = schema[0];
+            if (Array.isArray(firstItem)) {
+                // Handle nested array shorthand
+                return {
+                    dataType: PropType.ARRAY,
+                    items: this._normalizeSchema(firstItem),
+                };
+            }
+            return {
+                dataType: PropType.ARRAY,
+                items: this._normalizeSchema(firstItem),
+            };
+        }
+        // If schema is an object without dataType/properties, assume it's an object schema
+        if (typeof schema === 'object' && !('dataType' in schema) && !('oneOf' in schema)) {
+            const normalizedProperties = {};
+            for (const [key, value] of Object.entries(schema)) {
+                // Handle array shorthand in properties
+                if (Array.isArray(value)) {
+                    normalizedProperties[key] = {
+                        dataType: PropType.ARRAY,
+                        items: value.length === 1
+                            ? this._normalizeSchema(value[0])
+                            : {
+                                oneOf: value.map((s) => this._normalizeSchema(s)),
+                            },
+                    };
+                }
+                else {
+                    normalizedProperties[key] = this._normalizeSchema(value);
+                }
+            }
+            return {
+                dataType: PropType.OBJECT,
+                properties: normalizedProperties,
+                additionalProperties: !RuntimeValidator._strict,
+            };
+        }
+        // If schema is a union type, normalize each of its schemas
+        if (typeof schema === 'object' && 'oneOf' in schema) {
+            const unionSchema = schema;
+            return {
+                ...unionSchema,
+                oneOf: unionSchema.oneOf.map((s) => this._normalizeSchema(s)),
+            };
+        }
+        // If schema is an object schema, normalize its properties
+        if (typeof schema === 'object' && 'properties' in schema) {
+            const objSchema = schema;
+            const normalizedProperties = {};
+            for (const [key, value] of Object.entries(objSchema.properties)) {
+                normalizedProperties[key] = this._normalizeSchema(value);
+            }
+            return {
+                ...objSchema,
+                properties: normalizedProperties,
+            };
+        }
+        return schema;
     }
 }
